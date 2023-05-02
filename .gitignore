@@ -1,0 +1,10 @@
+external
+lib
+MT22Class.class
+run.py
+test
+main/mt22/parser
+main/mt22/astgen
+main/mt22/checker
+main/mt22/codegen/__pycache__
+main/mt22/utils/__pycache__
