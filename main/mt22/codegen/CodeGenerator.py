@@ -195,6 +195,7 @@ class CodeGenVisitor(Visitor):
         rc, rt = self.visit(ast.rhs, Access(o.frame, o.sym, False))
         lc, lt = self.visit(ast.lhs, Access(o.frame, o.sym, True))
         if type(ast.lhs) is ArrayCell:
+            print(lt)
             self.emit.printout(lc)
             self.emit.printout(rc)
             self.emit.printout(self.emit.emitASTORE(lt, o.frame))

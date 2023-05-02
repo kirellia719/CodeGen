@@ -2,7 +2,9 @@ external
 lib
 MT22Class.class
 run.py
-test
+test/__pycache__
+test/solutions
+test/testcases
 main/mt22/parser
 main/mt22/astgen
 main/mt22/checker
