@@ -105,7 +105,7 @@ class Emitter():
         elif typeIn is BooleanType:
             return self.jvm.emitNEWARRAY("boolean")
         elif typeIn is StringType:
-            return self.jvm.emitANEWARRAY(self.getJVMType(in_))
+            return self.jvm.emitANEWARRAY("java/lang/String")
         elif typeIn is ArrayType:
             return self.jvm.emitANEWARRAY(self.getJVMType(in_))
 
@@ -117,6 +117,10 @@ class Emitter():
         frame.pop()
         if type(in_) is IntegerType:
             return self.jvm.emitIALOAD()
+        if type(in_) is FloatType:
+            return self.jvm.emitFALOAD()
+        if type(in_) is BooleanType:
+            return self.jvm.emitBALOAD()
         elif type(in_) is ArrayType:
             return self.jvm.emitAALOAD()
         elif type(in_) is ClassType or type(in_) is StringType:
@@ -134,6 +138,10 @@ class Emitter():
         frame.pop()
         if type(in_) is IntegerType:
             return self.jvm.emitIASTORE()
+        if type(in_) is FloatType:
+            return self.jvm.emitFASTORE()
+        if type(in_) is BooleanType:
+            return self.jvm.emitBASTORE()
         elif type(in_) is ArrayType:
             return self.jvm.emitAASTORE()
         elif type(in_) is ClassType or type(in_) is StringType:
@@ -168,6 +176,10 @@ class Emitter():
 
         frame.push()
         if type(inType) is IntegerType:
+            return self.jvm.emitILOAD(index)
+        elif type(inType) is FloatType:
+            return self.jvm.emitFLOAD(index)
+        elif type(inType) is BooleanType:
             return self.jvm.emitILOAD(index)
         elif type(inType) is ArrayType:
             return self.jvm.emitALOAD(index)
@@ -204,6 +216,10 @@ class Emitter():
         frame.pop()
 
         if type(inType) is IntegerType:
+            return self.jvm.emitISTORE(index)
+        elif type(inType) is FloatType:
+            return self.jvm.emitFSTORE(index)
+        elif type(inType) is BooleanType:
             return self.jvm.emitISTORE(index)
         elif type(inType) is ArrayType:
             return self.jvm.emitASTORE(index)
@@ -343,16 +359,17 @@ class Emitter():
     def emitNOT(self, in_, frame):
         # in_: Type
         # frame: Frame
-
         label1 = frame.getNewLabel()
         label2 = frame.getNewLabel()
         result = list()
-        result.append(emitIFTRUE(label1, frame))
-        result.append(emitPUSHCONST("true", in_, frame))
-        result.append(emitGOTO(label2, frame))
-        result.append(emitLABEL(label1, frame))
-        result.append(emitPUSHCONST("false", in_, frame))
-        result.append(emitLABEL(label2, frame))
+        frame.pop()
+        result.append(self.jvm.emitIFNE(label1))
+        result.append(self.emitPUSHCONST(1, IntegerType(), frame))
+        result.append(self.emitGOTO(label2, frame))
+        result.append(self.emitLABEL(label1, frame))
+        frame.pop()
+        result.append(self.emitPUSHCONST(0, IntegerType(), frame))
+        result.append(self.emitLABEL(label2, frame))
         return ''.join(result)
 
     '''
@@ -447,23 +464,40 @@ class Emitter():
 
         frame.pop()
         frame.pop()
-        if op == ">":
-            result.append(self.jvm.emitIFICMPLE(labelF))
-        elif op == ">=":
-            result.append(self.jvm.emitIFICMPLT(labelF))
-        elif op == "<":
-            result.append(self.jvm.emitIFICMPGE(labelF))
-        elif op == "<=":
-            result.append(self.jvm.emitIFICMPGT(labelF))
-        elif op == "!=":
-            result.append(self.jvm.emitIFICMPEQ(labelF))
-        elif op == "==":
-            result.append(self.jvm.emitIFICMPNE(labelF))
-        result.append(self.emitPUSHCONST("1", IntegerType(), frame))
+
+        if type(in_) is IntegerType or type(in_) is BooleanType:
+            if op == ">":
+                result.append(self.jvm.emitIFICMPLE(labelF))
+            elif op == ">=":
+                result.append(self.jvm.emitIFICMPLT(labelF))
+            elif op == "<":
+                result.append(self.jvm.emitIFICMPGE(labelF))
+            elif op == "<=":
+                result.append(self.jvm.emitIFICMPGT(labelF))
+            elif op == "!=":
+                result.append(self.jvm.emitIFICMPEQ(labelF))
+            elif op == "==":
+                result.append(self.jvm.emitIFICMPNE(labelF))
+        else:
+            result.append(self.jvm.emitFCMPL())
+            if op == ">":
+                result.append(self.jvm.emitIFLE(labelF))
+            elif op == ">=":
+                result.append(self.jvm.emitIFLT(labelF))
+            elif op == "<":
+                result.append(self.jvm.emitIFGE(labelF))
+            elif op == "<=":
+                result.append(self.jvm.emitIFGT(labelF))
+            elif op == "!=":
+                result.append(self.jvm.emitIFEQ(labelF))
+            elif op == "==":
+                result.append(self.jvm.emitIFNE(labelF))
+
+        result.append(self.emitPUSHCONST(1, IntegerType(), frame))
         frame.pop()
         result.append(self.emitGOTO(labelO, frame))
         result.append(self.emitLABEL(labelF, frame))
-        result.append(self.emitPUSHCONST("0", IntegerType(), frame))
+        result.append(self.emitPUSHCONST(0, IntegerType(), frame))
         result.append(self.emitLABEL(labelO, frame))
         return ''.join(result)
 
@@ -613,9 +647,15 @@ class Emitter():
         # in_: Type
         # frame: Frame
 
-        if type(in_) is IntegerType:
+        if type(in_) is IntegerType or type(in_) is BooleanType:
             frame.pop()
             return self.jvm.emitIRETURN()
+        elif type(in_) is FloatType:
+            frame.pop()
+            return self.jvm.emitFRETURN()
+        elif type(in_) is StringType:
+            frame.pop()
+            return self.jvm.emitARETURN()
         elif type(in_) is VoidType:
             return self.jvm.emitRETURN()
 
@@ -654,9 +694,8 @@ class Emitter():
         result = list()
         result.append(self.jvm.emitSOURCE(name + ".java"))
         result.append(self.jvm.emitCLASS("public " + name))
-        result.append(self.jvm.emitSUPER(
-            "java/land/Object" if parent == "" else parent))
-        return ''.join(result)
+        result.append(self.jvm.emitSUPER("java/land/Object" if parent == "" else parent))
+        return ''.join(result) + '\n'
 
     def emitLIMITSTACK(self, num):
         # num: Int

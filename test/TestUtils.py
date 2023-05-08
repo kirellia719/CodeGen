@@ -180,7 +180,7 @@ class TestCodeGen():
 
         TestCodeGen.check(SOL_DIR, asttree, num)
 
-        dest = open(os.path.join(SOL_DIR, str(num) + ".txt"), "r")
+        dest = open(os.path.join(SOL_DIR, str(num), str(num) + ".txt"), "r")
         line = dest.read()
         return line == expect
 
@@ -190,7 +190,7 @@ class TestCodeGen():
         path = os.path.join(soldir, str(num))
         if not os.path.isdir(path):
             os.mkdir(path)
-        f = open(os.path.join(soldir, str(num) + ".txt"), "w")
+        f = open(os.path.join(soldir, str(num), str(num) + ".txt"), "w")
         try:
             codeGen.gen(asttree, path)
 

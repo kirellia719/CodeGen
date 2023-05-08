@@ -1,0 +1,12 @@
+//DISCUSS
+1. Thêm các hàm có sẵn trong io.java
+2. sửa rem -> irem (MachineCode)
+3. Thêm str(label) (emitGOTO MachineCode)
+4. Thêm ClassType vào AST
+5. Thêm  -> self.brkLabel (getBreakLabel Frame)
+
+//SELF FEED
+1. Check kiểu Float ở emitREOP
+
+
+// TODO:
